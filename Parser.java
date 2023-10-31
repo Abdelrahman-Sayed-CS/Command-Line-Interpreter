@@ -7,13 +7,18 @@ class Parser {
     //where "input" is the string command entered by the user
     public boolean parse(String input)
     {
+        if(input.indexOf(" ") == -1){
+            commandName = input;
+            return true;
+        }
         commandName = input.substring(0, input.indexOf(" "));
         CheckedCommand c = new CheckedCommand();
         // check if this commandName is exist or no
         if(!c.commandIsExist(commandName)){return false;}
 
         // cut the arguments to strings and store it in array args 
-        String arg = "";
+       if(input.length() > input.indexOf(" ")+1){
+         String arg = "";
         for (int i = input.indexOf(" ")+1; i < input.length(); i++) {
             if(input.charAt(i) != ' ')arg+=input.charAt(i);
             else{
@@ -23,7 +28,7 @@ class Parser {
         }
         if(!arg.equals(""))
             arguments.add(arg);
-
+       }
         return false;
     }
     public String getCommandName()
