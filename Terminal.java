@@ -1,4 +1,6 @@
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,20 +14,21 @@ public class Terminal {
     private Parser parser;
     private ArrayList<String> outputs;
     // Start your path as your current user path directory
-    private Path currentPath = Paths.get(System.getProperty("user.home"));
+    private Path currentPath;
 
-    public Terminal() {
-        return;
+    public Terminal(){
+
     }
-
     public Terminal(String input) {
         outputs = new ArrayList<>();
         parser = new Parser();
-        directory = System.getProperty("user.dir");
-        parser.parse(input);
+        currentPath = Paths.get(System.getProperty("user.home"));
     }
     // Implement each command in a method, for example:
-
+    public void parse(String input) {   
+        parser.parse(input);
+        parser.printArguments();
+    }
     // echo
     public String echo() {
         return parser.arguments.get(0);
@@ -33,7 +36,7 @@ public class Terminal {
 
     // pwd
     public String pwd() {
-        return directory;
+        return currentPath.toString();
     }
 
     // ls + ls -r
@@ -42,8 +45,8 @@ public class Terminal {
         // Collections.sort(terminal.outputs);
         // ** use this for ls -r
         // Collections.sort(terminal.outputs, Collections.reverseOrder());
-        File dirPath = new File(directory);
-        if (isValidPath(directory)) {
+        File dirPath = new File(currentPath.toString());
+        if (isValidPath(currentPath.toString())) {
             File[] files = dirPath.listFiles();
             if (files != null) {
                 for (File f : files) {
@@ -70,7 +73,21 @@ public class Terminal {
         }
         return true;
     }
-
+    // remove file   filePath --> 
+    public Boolean rm(String filePath){
+         File file = new File(filePath);
+        // Check if the file exists before attempting to delete
+        if (file.exists()) {
+            // Attempt to delete the file
+            if (file.delete()) {
+                return true;
+            } else {
+               return false;
+            }
+        } else {
+           return false;
+        }
+    }
     // To check if a string represents a valid file path or no
     public Boolean isValidPath(String path) {
         File file = new File(path);
@@ -91,6 +108,8 @@ public class Terminal {
 
         Path path = Paths.get(pathStr);
         if (!path.isAbsolute()) {
+            // absolute path --> I:\VSprojects\ProjectsOfThirdYear\DataCom\file
+            // relative path --> \ProjectsOfThirdYear\DataCom\file
             // Make the relative path absolute path by merging it with the current directory
             path = Paths.get(this.currentPath.toString(), pathStr);
         }
@@ -129,9 +148,26 @@ public class Terminal {
         }
         return true;
     }
-
+    // remind some thing
+    public String cat(String pathFile){
+        try {
+            StringBuilder text = new StringBuilder();
+            // FileReader file = new FileReader(currentPath.toString() + "/"+ fileName);
+            FileReader file = new FileReader(pathFile);
+            try (BufferedReader reader = new BufferedReader(file)) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    text.append(line).append(System.lineSeparator());
+                }
+            }
+            text = new StringBuilder(text.substring(0, text.length() - 1));
+            return text.toString();
+        } catch (IOException e) {
+            return e.getMessage();
+        }
+    }
     // print res for any command ex --> ls, ls -r
-    public void printOutputForAnyCommand() {
+    public void printOutputForAnyCommand() { 
         if (outputs.size() > 0) {
             for (int i = 0; i < outputs.size(); i++) {
                 System.out.print(outputs.get(i) + " ");
@@ -144,21 +180,28 @@ public class Terminal {
     // ...
     // This method will choose the suitable command method to be called
     public void chooseCommandAction() {
-    }
+    } 
 
     public static void main(String[] args) {
         // crete object type parser to divide the input to command and args
         Scanner scanner = new Scanner(System.in);
-        Terminal terminal = new Terminal();
-        while (true) {
+        String line = scanner.nextLine();
+        Terminal terminal = new Terminal(line);
+        System.out.println(terminal.rm("I:\\VSprojects\\ProjectsOfThirdYear\\DataCom\\file\\fff.txt"));
+        // System.out.println(terminal.cat("I:\\VSprojects\\ProjectsOfThirdYear\\DataCom\\file\\FileString.txt"));
 
-            System.out.println("Enter your command : \n");
-            String line = scanner.nextLine();
+        // terminal.mkdir("fdfdf");
+        // while (true) {
 
-            terminal.cd(line);
-        }
+        //     System.out.println("Enter your command : \n");
+
+        //     terminal.cd(line);
+        // }
         // System.out.println(terminal.mkdir("exampleDirectory"));
 
         // terminal.outputs.clear();
     }
 }
+
+
+// echo + pwd + ls + ls -r  + mkdir + touch + cd  

@@ -2,9 +2,12 @@ import java.util.ArrayList;
 
 class Parser {
     String commandName;
-    ArrayList<String> arguments = new ArrayList<>();
+    ArrayList<String> arguments;
     //This method will divide the input into commandName and args
     //where "input" is the string command entered by the user
+    public Parser(){
+        arguments = new ArrayList<String>();
+    }
     public boolean parse(String input)
     {
         if(input.indexOf(" ") == -1){
@@ -40,9 +43,11 @@ class Parser {
         return arguments;
     }
     public void printArguments(){
+        System.out.print("name command : " + commandName);
         for (int i = 0; i < arguments.size(); i++) {
             System.out.print(arguments.get(i) + " ");
         }
         System.out.println();
     }
+    // cd lklfkdlkfld klfdkdl erperpe
 }
