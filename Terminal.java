@@ -16,6 +16,8 @@ import java.nio.file.StandardCopyOption;
 public class Terminal {
   private Parser parser;
   private ArrayList<String> outputs;
+  private ArrayList<String> commandHistory;
+
   // Start your path as your current user path directory
   private Path currentPath;
 
@@ -23,12 +25,24 @@ public class Terminal {
     outputs = new ArrayList<>();
     parser = new Parser();
     currentPath = Paths.get(System.getProperty("user.home"));
+    commandHistory = new ArrayList<>();
   }
 
   // Implement each command in a method, for example:
   public void parse(String input) {
     parser.parse(input);
+    commandHistory.add(input);
   }
+
+  public void displayCommandHistory() {
+    System.out.println("Command History:");
+    int counter = 1;
+    for (String command : commandHistory) {
+      System.out.println(counter + ". " + command);
+      counter++;
+    }
+  }
+
 
   public String getCurrentPath() {
     return currentPath.toString();
@@ -110,7 +124,12 @@ public class Terminal {
   }
 
   public boolean rmdir(String dirPath) {
-    File directory = new File(makeAbsoluteIfNot(dirPath));
+    File directory;
+    if (dirPath.equals("*")) {
+      directory = this.currentPath.toFile();
+    } else {
+      directory = new File(makeAbsoluteIfNot(dirPath));
+    }
 
     if (directory.isDirectory()) {
       File[] files = directory.listFiles();
@@ -410,7 +429,8 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for rmdir.");
       }
-
+    } else if ("history".equals(commandName)) {
+      displayCommandHistory();
     } else {
       System.out.println("Error: Unknown command.");
     }
