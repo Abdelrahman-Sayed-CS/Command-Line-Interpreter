@@ -18,6 +18,7 @@ public class CheckedCommand {
         commands.put(">", true);
         commands.put(">>", true);
         commands.put("history", true);
+        commands.put("wc", true);
     }
     public Boolean commandIsExist(String command){
         return commands.get(command);

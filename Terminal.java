@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Scanner;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -317,6 +316,26 @@ public class Terminal {
     }
   }
 
+  public void wc(String filePath) {
+    int lineCount = 0;
+    int wordCount = 0;
+    int charCount = 0;
+    try (BufferedReader reader = new BufferedReader(new FileReader(makeAbsoluteIfNot(filePath)))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        lineCount++;
+        charCount += line.length();
+        String[] words = line.split("\\s+"); // Split the line into words using whitespace as a delimiter
+        wordCount += words.length;
+      }
+      System.out.println(lineCount + " lines, " + wordCount + " words, " + charCount + " characters, ");
+    } catch (IOException e) {
+      System.err.println(e.getMessage());
+    }
+
+  }
+
+
   // print res for any command ex --> ls, ls -r
   public void printOutputForAnyCommand() {
     if (!outputs.isEmpty()) {
@@ -431,7 +450,15 @@ public class Terminal {
       }
     } else if ("history".equals(commandName)) {
       displayCommandHistory();
-    } else {
+    } else if ("wc".equals(commandName)) {
+      ArrayList<String> args = parser.getArgs();
+      if (args.size() == 1) {
+        wc(args.get(0));
+      } else {
+        System.out.println("Error: Invalid number of arguments for wc.");
+      }
+    }
+    else {
       System.out.println("Error: Unknown command.");
     }
   }
