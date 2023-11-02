@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
+
 import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -55,10 +57,12 @@ public class Terminal {
         outputs.clear(); // Clear existing outputs
         int counter = 1;
         for (File f : files) {
-          if (f.isFile()) {
+          if (f.isDirectory()) {
+            outputs.add(counter + "- " + f.getName() + File.separator + '\n');
+          } else if (f.isFile()) {
             outputs.add(counter + "- " + f.getName() + '\n');
-            counter++;
           }
+          counter++;
         }
       } else {
         return false;
@@ -88,8 +92,8 @@ public class Terminal {
     }
     return created;
   }
-
   // remove file filePath -->
+
   public Boolean rm(String filePath) {
     File file = new File(filePath);
     // Check if the file exists before attempting to delete
@@ -104,6 +108,34 @@ public class Terminal {
       return false;
     }
   }
+
+  public boolean rmdir(String dirPath) {
+    File directory = new File(makeAbsoluteIfNot(dirPath));
+
+    if (directory.isDirectory()) {
+      File[] files = directory.listFiles();
+      // Check if the directory is empty
+      if (files != null && files.length == 0) {
+        return directory.delete();
+      } else if (dirPath.equals("*")) {
+        // Remove all empty directories in the current directory
+        File[] currentDirFiles = this.currentPath.toFile().listFiles();
+        if (currentDirFiles != null) {
+          for (File currentDirFile : currentDirFiles) {
+            if (currentDirFile.isDirectory() && currentDirFile.list().length == 0) {
+              if (!currentDirFile.delete()) {
+                return false;
+              }
+            }
+          }
+        }
+        return true;
+      }
+    }
+
+    return false;
+  }
+
 
   // To check if a string represents a valid file path or no
   public Boolean isValidPath(String path) {
@@ -352,7 +384,7 @@ public class Terminal {
         cp(args.get(0), args.get(1));
       } else {
         System.out
-            .println("Error: Invalid number of arguments for cp\n(Should be just two or 3 if you're using cp -r).");
+                .println("Error: Invalid number of arguments for cp\n(Should be just two or 3 if you're using cp -r).");
       }
     } else if ("cat".equals(commandName)) {
       ArrayList<String> args = parser.getArgs();
@@ -366,6 +398,19 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for cat.");
       }
+    } else if ("rmdir".equals(commandName)) {
+      ArrayList<String> args = parser.getArgs();
+      if (args.size() == 1) {
+        boolean result = rmdir(args.get(0));
+        if (result) {
+          System.out.println("Directory removed.");
+        } else {
+          System.out.println("Error: Directory cannot be removed or is not empty.");
+        }
+      } else {
+        System.out.println("Error: Invalid number of arguments for rmdir.");
+      }
+
     } else {
       System.out.println("Error: Unknown command.");
     }
