@@ -10,25 +10,27 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Terminal {
-    private String directory;
     private Parser parser;
     private ArrayList<String> outputs;
     // Start your path as your current user path directory
     private Path currentPath;
 
-    public Terminal(){
-
-    }
-    public Terminal(String input) {
+    public Terminal() {
         outputs = new ArrayList<>();
         parser = new Parser();
         currentPath = Paths.get(System.getProperty("user.home"));
     }
+
     // Implement each command in a method, for example:
-    public void parse(String input) {   
+    public void parse(String input) {
         parser.parse(input);
         parser.printArguments();
     }
+
+    public String getCurrentPath() {
+        return currentPath.toString();
+    }
+
     // echo
     public String echo() {
         return parser.arguments.get(0);
@@ -73,36 +75,45 @@ public class Terminal {
         }
         return true;
     }
-    // remove file   filePath --> 
-    public Boolean rm(String filePath){
-         File file = new File(filePath);
+
+    // remove file filePath -->
+    public Boolean rm(String filePath) {
+        File file = new File(filePath);
         // Check if the file exists before attempting to delete
         if (file.exists()) {
             // Attempt to delete the file
             if (file.delete()) {
                 return true;
             } else {
-               return false;
+                return false;
             }
         } else {
-           return false;
+            return false;
         }
     }
+
     // To check if a string represents a valid file path or no
     public Boolean isValidPath(String path) {
         File file = new File(path);
         return file.exists() && file.isDirectory();
     }
 
+    public Boolean isValidPath(Path path) {
+        return Files.exists(path) && Files.isDirectory(path);
+    }
+
     public void cd(String pathStr) {
-        if (pathStr.equals("..")) {
+        if (pathStr.equals("")) {
+            this.currentPath = Paths.get(System.getProperty("user.home"));
+            return;
+        } else if (pathStr.equals("..")) {
             if (this.currentPath.getParent() == null) {
-                System.out.println("Hey:" + this.currentPath.toString());
+                System.out.println("CurrentDir:" + this.currentPath.toString());
                 return;
             }
             // if there is parent directory
             this.currentPath = this.currentPath.getParent();
-            System.out.println("Hey:" + this.currentPath.toString());
+            System.out.println("Current Dir:" + this.currentPath.toString());
             return;
         }
 
@@ -114,24 +125,27 @@ public class Terminal {
             path = Paths.get(this.currentPath.toString(), pathStr);
         }
 
-        if (Files.exists(path) && Files.isDirectory(path)) {
+        if (isValidPath(path)) {
             this.currentPath = path;
         }
-
-        System.out.println(this.currentPath.toString());
+        System.out.println("Current Dir:" + this.currentPath.toString());
     }
 
     public boolean touch(String pathStr) {
-
+        // path to the file
         Path path = Paths.get(pathStr);
+        // path to the file directory
         Path parentPath = path.getParent();
 
-        if (!parentPath.isAbsolute()) {
+        // If the file directory is the currentPath(parentPath == null)
+        // or if it was not absolute path, then merge it with the currentPath
+        if (parentPath == null || !parentPath.isAbsolute()) {
             // Make the relative path absolute path by merging it with the current directory
-            parentPath = Paths.get(this.currentPath.toString(), parentPath.toString());
+            path = Paths.get(this.currentPath.toString(), path.toString());
+            parentPath = path.getParent();
         }
 
-        if (Files.exists(parentPath) && Files.isDirectory(parentPath)) {
+        if (isValidPath(parentPath)) {
             File file = new File(path.toString());
             try {
                 if (file.createNewFile()) {
@@ -148,8 +162,9 @@ public class Terminal {
         }
         return true;
     }
+
     // remind some thing
-    public String cat(String pathFile){
+    public String cat(String pathFile) {
         try {
             StringBuilder text = new StringBuilder();
             // FileReader file = new FileReader(currentPath.toString() + "/"+ fileName);
@@ -166,8 +181,9 @@ public class Terminal {
             return e.getMessage();
         }
     }
+
     // print res for any command ex --> ls, ls -r
-    public void printOutputForAnyCommand() { 
+    public void printOutputForAnyCommand() {
         if (outputs.size() > 0) {
             for (int i = 0; i < outputs.size(); i++) {
                 System.out.print(outputs.get(i) + " ");
@@ -176,26 +192,30 @@ public class Terminal {
         }
     }
 
-    // public void cd(){}
-    // ...
     // This method will choose the suitable command method to be called
     public void chooseCommandAction() {
-    } 
+
+    }
 
     public static void main(String[] args) {
         // crete object type parser to divide the input to command and args
         Scanner scanner = new Scanner(System.in);
-        String line = scanner.nextLine();
-        Terminal terminal = new Terminal(line);
-        System.out.println(terminal.rm("I:\\VSprojects\\ProjectsOfThirdYear\\DataCom\\file\\fff.txt"));
+        Terminal terminal = new Terminal();
+        while (true) {
+            System.out.print("@" + terminal.getCurrentPath() + ">");
+            String line = scanner.nextLine();
+            terminal.cd(line);
+        }
+        // System.out.println(terminal.rm("I:\\VSprojects\\ProjectsOfThirdYear\\DataCom\\file\\fff.txt"));
+        // scanner.close();
         // System.out.println(terminal.cat("I:\\VSprojects\\ProjectsOfThirdYear\\DataCom\\file\\FileString.txt"));
 
         // terminal.mkdir("fdfdf");
         // while (true) {
 
-        //     System.out.println("Enter your command : \n");
+        // System.out.println("Enter your command : \n");
 
-        //     terminal.cd(line);
+        // terminal.cd(line);
         // }
         // System.out.println(terminal.mkdir("exampleDirectory"));
 
@@ -203,5 +223,4 @@ public class Terminal {
     }
 }
 
-
-// echo + pwd + ls + ls -r  + mkdir + touch + cd  
+// echo + pwd + ls + ls -r + mkdir + touch + cd
