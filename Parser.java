@@ -1,53 +1,60 @@
 import java.util.ArrayList;
 
 class Parser {
-    String commandName;
-    ArrayList<String> arguments;
-    //This method will divide the input into commandName and args
-    //where "input" is the string command entered by the user
-    public Parser(){
-        arguments = new ArrayList<String>();
-    }
-    public boolean parse(String input)
-    {
-        if(input.indexOf(" ") == -1){
-            commandName = input;
-            return true;
-        }
-        commandName = input.substring(0, input.indexOf(" "));
-        CheckedCommand c = new CheckedCommand();
-        // check if this commandName is exist or no
-        if(!c.commandIsExist(commandName)){return false;}
+  String commandName;
+  ArrayList<String> arguments;
 
-        // cut the arguments to strings and store it in array args 
-       if(input.length() > input.indexOf(" ")+1){
-         String arg = "";
-        for (int i = input.indexOf(" ")+1; i < input.length(); i++) {
-            if(input.charAt(i) != ' ')arg+=input.charAt(i);
-            else{
-                arguments.add(arg);
-                arg = "";
-            }
+  // This method will divide the input into commandName and args
+  // where "input" is the string command entered by the user
+  public Parser() {
+    arguments = new ArrayList<String>();
+  }
+
+  public boolean parse(String input) {
+    commandName = "";
+    arguments.clear();
+    if (input.indexOf(" ") == -1) {
+      commandName = input;
+      return true;
+    }
+    commandName = input.substring(0, input.indexOf(" "));
+    CheckedCommand c = new CheckedCommand();
+    // check if this commandName is exist or no
+    if (!c.commandIsExist(commandName)) {
+      return false;
+    }
+
+    // cut the arguments to strings and store it in array args
+    if (input.length() > input.indexOf(" ") + 1) {
+      String arg = "";
+      for (int i = input.indexOf(" ") + 1; i < input.length(); i++) {
+        if (input.charAt(i) != ' ')
+          arg += input.charAt(i);
+        else {
+          arguments.add(arg);
+          arg = "";
         }
-        if(!arg.equals(""))
-            arguments.add(arg);
-       }
-        return false;
+      }
+      if (!arg.equals(""))
+        arguments.add(arg);
     }
-    public String getCommandName()
-    {
-        return commandName;
+    return false;
+  }
+
+  public String getCommandName() {
+    return commandName;
+  }
+
+  public ArrayList<String> getArgs() {
+    return arguments;
+  }
+
+  public void printArguments() {
+    System.out.print("name command : " + commandName);
+    for (int i = 0; i < arguments.size(); i++) {
+      System.out.print(arguments.get(i) + " ");
     }
-    public ArrayList<String> getArgs()
-    {
-        return arguments;
-    }
-    public void printArguments(){
-        System.out.print("name command : " + commandName);
-        for (int i = 0; i < arguments.size(); i++) {
-            System.out.print(arguments.get(i) + " ");
-        }
-        System.out.println();
-    }
-    // cd lklfkdlkfld klfdkdl erperpe
+    System.out.println();
+  }
+  // cd lklfkdlkfld klfdkdl erperpe
 }

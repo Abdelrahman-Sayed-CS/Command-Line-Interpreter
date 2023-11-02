@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.util.Scanner;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 public class Terminal {
   private Parser parser;
@@ -24,7 +26,6 @@ public class Terminal {
   // Implement each command in a method, for example:
   public void parse(String input) {
     parser.parse(input);
-    parser.printArguments();
   }
 
   public String getCurrentPath() {
@@ -74,7 +75,8 @@ public class Terminal {
       if (!path.isAbsolute()) {
         // absolute path --> I:\VSprojects\ProjectsOfThirdYear\DataCom\file
         // relative path --> \ProjectsOfThirdYear\DataCom\file
-        // If it's not an absolute path, create a full path by merging it with the current directory
+        // If it's not an absolute path, create a full path by merging it with the
+        // current directory
         path = Paths.get(this.currentPath.toString(), s);
       }
       File directoryFile = new File(path.toString());
@@ -129,12 +131,8 @@ public class Terminal {
     }
 
     Path path = Paths.get(pathStr);
-    if (!path.isAbsolute()) {
-      // absolute path --> I:\VSprojects\ProjectsOfThirdYear\DataCom\file
-      // relative path --> \ProjectsOfThirdYear\DataCom\file
-      // Make the relative path absolute path by merging it with the current directory
-      path = Paths.get(this.currentPath.toString(), pathStr);
-    }
+    // Make the relative path absolute path by merging it with the current directory
+    path = makeAbsoluteIfNot(path);
 
     if (isValidPath(path)) {
       this.currentPath = path;
@@ -145,16 +143,13 @@ public class Terminal {
   public boolean touch(String pathStr) {
     // path to the file
     Path path = Paths.get(pathStr);
+
+    // If the file directory is the currentPath (parentPath == null)
+    // or if it was not absolute path, Then Merge it with the currentPath
+    path = makeAbsoluteIfNot(path);
+
     // path to the file directory
     Path parentPath = path.getParent();
-
-    // If the file directory is the currentPath(parentPath == null)
-    // or if it was not absolute path, then merge it with the currentPath
-    if (parentPath == null || !parentPath.isAbsolute()) {
-      // Make the relative path absolute path by merging it with the current directory
-      path = Paths.get(this.currentPath.toString(), path.toString());
-      parentPath = path.getParent();
-    }
 
     if (isValidPath(parentPath)) {
       File file = new File(path.toString());
@@ -172,6 +167,84 @@ public class Terminal {
       return false;
     }
     return true;
+  }
+
+  /**
+   * @param path can be null, relative or absolute path
+   * @return null => return currentPath Directory
+   * @return absolute path => if it was relative path or it was already absolute
+   */
+  public Path makeAbsoluteIfNot(Path path) {
+    if (path == null) {
+      path = this.currentPath;
+    } else if (!path.isAbsolute()) {
+      // Make the relative path absolute path by merging it with the current directory
+      path = Paths.get(this.currentPath.toString(), path.toString());
+    }
+    return path;
+  }
+
+  /**
+   * @param pathStr as path String
+   * @return absolute path as a String
+   */
+  public String makeAbsoluteIfNot(String pathStr) {
+    return makeAbsoluteIfNot(Paths.get(pathStr)).toString();
+  }
+
+  // cp
+  public boolean cp(String firstFile, String secondFile) {
+    Path path1 = Paths.get(firstFile);
+    path1 = makeAbsoluteIfNot(path1);
+
+    if (!isValidPath(path1.getParent()) && !Files.isDirectory(path1)) {
+      System.out.println("First path is not valid");
+      return false;
+    }
+
+    Path path2 = Paths.get(secondFile);
+    path2 = makeAbsoluteIfNot(path2);
+
+    if (!isValidPath(path2.getParent()) && !Files.isDirectory(path2)) {
+      System.out.println("Second path is not valid");
+      return false;
+    }
+
+    try {
+      // Copy firstFile content into SecondFile
+      Files.copy(path1, path2, StandardCopyOption.REPLACE_EXISTING);
+      System.out.println(path1.getFileName() + " content has been copied into " + path2.getFileName());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return false;
+  }
+
+  public boolean cp_r(String firstDir, String secondDir) {
+    Path path1 = Paths.get(firstDir);
+    path1 = makeAbsoluteIfNot(path1);
+
+    if (!isValidPath(path1)) {
+      System.out.println("First path is not valid");
+      return false;
+    }
+
+    Path path2 = Paths.get(secondDir);
+    path2 = makeAbsoluteIfNot(path2);
+
+    if (!isValidPath(path2)) {
+      System.out.println("Second path is not valid");
+      return false;
+    }
+
+    try {
+      // Copy the firstDir and its contents to secondDir
+      FileUtils.copyDirectory(path1.toFile(), path2.toFile());
+      System.out.println(path1.getFileName() + " content has been copied into " + path2.getFileName());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return false;
   }
 
   // remind some thing
@@ -264,13 +337,22 @@ public class Terminal {
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
         boolean result = touch(args.get(0));
-        if (result) {
-          System.out.println("File created.");
-        } else {
+        if (!result) {
           System.out.println("Error: Unable to create file.");
         }
       } else {
         System.out.println("Error: Invalid number of arguments for touch.");
+      }
+    } else if ("cp".equals(commandName)) {
+      ArrayList<String> args = parser.getArgs();
+
+      if (args.size() == 3 && args.get(0).equals("-r")) {
+        cp_r(args.get(1), args.get(2));
+      } else if (args.size() == 2) {
+        cp(args.get(0), args.get(1));
+      } else {
+        System.out
+            .println("Error: Invalid number of arguments for cp\n(Should be just two or 3 if you're using cp -r).");
       }
     } else if ("cat".equals(commandName)) {
       ArrayList<String> args = parser.getArgs();
@@ -289,7 +371,6 @@ public class Terminal {
     }
   }
 
-
   public static void main(String[] args) {
     // crete object type parser to divide the input to command and args
     Scanner scanner = new Scanner(System.in);
@@ -297,7 +378,7 @@ public class Terminal {
     while (true) {
       System.out.print("@" + terminal.getCurrentPath() + ">");
       String line = scanner.nextLine();
-// Compares this String to another String, ignoring case considerations
+      // Compares this String to another String, ignoring case considerations
       if (line.equalsIgnoreCase("exit")) {
         // Exit the program
         break;
