@@ -93,24 +93,18 @@ public class Terminal {
   }
 
   // mkdir
-  public boolean mkdir(String... dirName) {
+  // absolute path --> I:\VSprojects\ProjectsOfThirdYear\DataCom\file
+  // relative path --> \ProjectsOfThirdYear\DataCom\file
+  // If it's not an absolute path, create a full path by merging it with the
+  // current directory
+  public boolean mkdir(Path path) {
     boolean created = true;
-    for (String s : dirName) {
-      Path path = Paths.get(s);
-      if (!path.isAbsolute()) {
-        // absolute path --> I:\VSprojects\ProjectsOfThirdYear\DataCom\file
-        // relative path --> \ProjectsOfThirdYear\DataCom\file
-        // If it's not an absolute path, create a full path by merging it with the
-        // current directory
-        path = Paths.get(this.currentPath.toString(), s);
-      }
       File directoryFile = new File(path.toString());
       if (!directoryFile.exists()) {
         if (!directoryFile.mkdir()) {
           created = false;
         }
       }
-    }
     return created;
   }
   // remove file filePath -->
@@ -392,21 +386,31 @@ public class Terminal {
     else if ("mkdir".equals(commandName)) {
       // Check for arguments and execute mkdir
       ArrayList<String> args = parser.getArgs();
-      if (!args.isEmpty()) {
-        boolean success = true;
-        for (String arg : args) {
-          boolean result = mkdir(arg);
-          if (!result) {
-            System.out.println("Error: Unable to create directory: " + arg);
-            success = false;
-          }
-        }
-        if (success) {
-          System.out.println("All directories created successfully.");
-        }
-      } else {
-        System.out.println("Error: No directory names specified for mkdir.");
-      }
+      
+  // for (String s : dirName) {
+  //     Path path = Paths.get(s);
+  //     if (!path.isAbsolute()) {
+       
+  //       path = Paths.get(this.currentPath.toString(), s);
+  //     }
+      // if (!args.isEmpty()) {
+      //   boolean success = true;
+      //   for (String arg : args) {
+      //     if(isValidPath(arg)){
+
+      //     }
+      //     boolean result = mkdir(arg);
+      //     if (!result) {
+      //       System.out.println("Error: Unable to create directory: " + arg);
+      //       success = false;
+      //     }
+      //   }
+      //   if (success) {
+      //     System.out.println("All directories created successfully.");
+      //   }
+      // } else {
+      //   System.out.println("Error: No directory names specified for mkdir.");
+      // }
     } 
     else if ("rm".equals(commandName)) {
       // Check for arguments
@@ -512,9 +516,15 @@ public class Terminal {
       } else {
         // Execute the command
         terminal.parse(line);
-        terminal.chooseCommandAction();
+        ArrayList<String> arg = new ArrayList<String>();
+        arg = terminal.parser.getArgs();
+        for (String string : arg) {
+          System.out.println(string);
+        }
+        // terminal.chooseCommandAction();
       }
     }
+
     scanner.close();
     // System.out.println(terminal.rm("I:\\VSprojects\\ProjectsOfThirdYear\\DataCom\\file\\fff.txt"));
     // System.out.println(terminal.cat("I:\\VSprojects\\ProjectsOfThirdYear\\DataCom\\file\\FileString.txt"));
@@ -531,5 +541,3 @@ public class Terminal {
     // terminal.outputs.clear();
   }
 }
-
-// echo + pwd + ls + ls -r + mkdir + touch + cd

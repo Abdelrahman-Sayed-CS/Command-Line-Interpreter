@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 
+
 class Parser {
   String commandName;
   ArrayList<String> arguments;
@@ -9,8 +10,28 @@ class Parser {
   public Parser() {
     arguments = new ArrayList<String>();
   }
-
-  public boolean parse(String input) {
+  // if closed equal false that is mean exist single cot and 
+  // closed still false un till exist another single cot 
+  // ex: 'fdfdfdf fdfd.txt' 
+  private int parseSingleCot(int i, String input){
+    String arg = "";
+    int index = -1;
+     for (int j = i; j < input.length(); j++) {
+       if(input.charAt(j) != '\'')
+        {
+          arg+=input.charAt(j);
+        }
+        else{
+          arguments.add(arg);
+          arg = "";
+          index = j+1;
+          break;
+        }
+     }
+     return index;
+  }
+  
+   public boolean parse(String input) {
     commandName = "";
     arguments.clear();
     if (input.indexOf(" ") == -1) {
@@ -23,24 +44,37 @@ class Parser {
     if (!c.commandIsExist(commandName)) {
       return false;
     }
-
     // cut the arguments to strings and store it in array args
     if (input.length() > input.indexOf(" ") + 1) {
+      int i = input.indexOf(" ") + 1;
       String arg = "";
-      for (int i = input.indexOf(" ") + 1; i < input.length(); i++) {
+      while (i < input.length())
+      {
+        if(input.charAt(i) == '\'')
+        {
+          System.out.println("single cot : " + i);
+          int k = parseSingleCot(i+1, input);
+          if(k != -1)
+            i = k; 
+          else 
+          {
+            break;
+          }
+          continue;
+        }
         if (input.charAt(i) != ' ')
           arg += input.charAt(i);
         else {
           arguments.add(arg);
           arg = "";
         }
+        i++;
       }
       if (!arg.equals(""))
         arguments.add(arg);
     }
-    return false;
+    return true;
   }
-
   public String getCommandName() {
     return commandName;
   }
@@ -48,13 +82,4 @@ class Parser {
   public ArrayList<String> getArgs() {
     return arguments;
   }
-
-  public void printArguments() {
-    System.out.print("name command : " + commandName);
-    for (int i = 0; i < arguments.size(); i++) {
-      System.out.print(arguments.get(i) + " ");
-    }
-    System.out.println();
-  }
-  // cd lklfkdlkfld klfdkdl erperpe
 }
