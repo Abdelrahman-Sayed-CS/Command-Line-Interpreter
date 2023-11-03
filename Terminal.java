@@ -145,7 +145,7 @@ public class Terminal {
   // remove file filePath -->
 
   public Boolean rm(String filePath) {
-    File file = new File(filePath);
+    File file = new File(makeAbsoluteIfNot(filePath));
     // Check if the file exists before attempting to delete
     if (file.exists()) {
       // Attempt to delete the file
@@ -306,7 +306,7 @@ public class Terminal {
     try {
       StringBuilder text = new StringBuilder();
       // FileReader file = new FileReader(currentPath.toString() + "/"+ fileName);
-      FileReader file = new FileReader(pathFile);
+      FileReader file = new FileReader(makeAbsoluteIfNot(pathFile));
       try (BufferedReader reader = new BufferedReader(file)) {
         String line;
         while ((line = reader.readLine()) != null) {
@@ -363,126 +363,136 @@ public class Terminal {
   // This method will choose the suitable command method to be called
   public void chooseCommandAction() {
     String commandName = this.parser.getCommandName();
-    if ("echo".equals(commandName)) {
-      String result = echo();
-      System.out.println(result);
-    } else if ("pwd".equals(commandName)) {
-      String result = pwd();
-      System.out.println(result);
-    } else if ("ls".equals(commandName)) {
-      Boolean result = ls();
-      ArrayList<String> args = new ArrayList<String>();
-      args = parser.getArgs();
-      if (result && args.size() >= 1 && args.get(0).equals("-r")) {
-        printOutputForAnyCommandReversed();
-      } else if (result && args.size() == 0) {
-        printOutputForAnyCommand();
-      } else {
-        System.out.println("Error: Unable to list files.");
+    switch (commandName) {
+      case "echo" -> {
+        String result = echo();
+        System.out.println(result);
       }
-    } else if ("mkdir".equals(commandName)) {
-      // Check for arguments and execute mkdir
-      ArrayList<String> args = parser.getArgs();
+      case "pwd" -> {
+        String result = pwd();
+        System.out.println(result);
+      }
+      case "ls" -> {
+        Boolean result = ls();
+        ArrayList<String> args = new ArrayList<String>();
+        args = parser.getArgs();
+        if (result && args.size() >= 1 && args.get(0).equals("-r")) {
+          printOutputForAnyCommandReversed();
+        } else if (result && args.size() == 0) {
+          printOutputForAnyCommand();
+        } else {
+          System.out.println("Error: Unable to list files.");
+        }
+      }
+      case "mkdir" -> {
+        // Check for arguments and execute mkdir
+        ArrayList<String> args = parser.getArgs();
 
-      if (!args.isEmpty()) {
-        boolean success = true;
-        for (String arg : args) {
-          Path path = Paths.get(arg);
-          path = makeAbsoluteIfNot(path);
-          if (isValidPath(path.getParent())) {
-            boolean result = mkdir(path);
-            if (!result) {
-              System.out.println("Error: Unable to create directory: " + arg);
-              success = false;
+        if (!args.isEmpty()) {
+          boolean success = true;
+          for (String arg : args) {
+            Path path = Paths.get(arg);
+            path = makeAbsoluteIfNot(path);
+            if (isValidPath(path.getParent())) {
+              boolean result = mkdir(path);
+              if (!result) {
+                System.out.println("Error: Unable to create directory: " + arg);
+                success = false;
+              }
             }
           }
+          if (success) {
+            System.out.println("All directories created successfully.");
+          }
+        } else {
+          System.out.println("Error: No directory names specified for mkdir.");
         }
-        if (success) {
-          System.out.println("All directories created successfully.");
-        }
-      } else {
-        System.out.println("Error: No directory names specified for mkdir.");
-      }
 
-    } else if ("rm".equals(commandName)) {
-      // Check for arguments
-      ArrayList<String> args = parser.getArgs();
-      if (args.size() == 1) {
-        boolean result = rm(args.get(0));
-        if (result) {
-          System.out.println("File removed.");
+      }
+      case "rm" -> {
+        // Check for arguments
+        ArrayList<String> args = parser.getArgs();
+        if (args.size() == 1) {
+          boolean result = rm(args.get(0));
+          if (result) {
+            System.out.println("File removed.");
+          } else {
+            System.out.println("Error: Unable to remove file.");
+          }
         } else {
-          System.out.println("Error: Unable to remove file.");
+          System.out.println("Error: Invalid number of arguments for rm.");
         }
-      } else {
-        System.out.println("Error: Invalid number of arguments for rm.");
       }
-    } else if ("cd".equals(commandName)) {
-      ArrayList<String> args = parser.getArgs();
-      if (args.isEmpty()) {
-        cd(""); // Call cd with an empty string
-      } else if (args.size() == 1) {
-        cd(args.get(0));
-      } else {
-        System.out.println("Error: Invalid number of arguments for cd.");
-      }
-    } else if ("touch".equals(commandName)) {
-      // Check for arguments and execute touch
-      ArrayList<String> args = parser.getArgs();
-      if (args.size() == 1) {
-        boolean result = touch(args.get(0));
-        if (!result) {
-          System.out.println("Error: Unable to create file.");
+      case "cd" -> {
+        ArrayList<String> args = parser.getArgs();
+        if (args.isEmpty()) {
+          cd(""); // Call cd with an empty string
+        } else if (args.size() == 1) {
+          cd(args.get(0));
+        } else {
+          System.out.println("Error: Invalid number of arguments for cd.");
         }
-      } else {
-        System.out.println("Error: Invalid number of arguments for touch.");
       }
-    } else if ("cp".equals(commandName)) {
-      ArrayList<String> args = parser.getArgs();
+      case "touch" -> {
+        // Check for arguments and execute touch
+        ArrayList<String> args = parser.getArgs();
+        if (args.size() == 1) {
+          boolean result = touch(args.get(0));
+          if (!result) {
+            System.out.println("Error: Unable to create file.");
+          }
+        } else {
+          System.out.println("Error: Invalid number of arguments for touch.");
+        }
+      }
+      case "cp" -> {
+        ArrayList<String> args = parser.getArgs();
 
-      if (args.size() == 3 && args.get(0).equals("-r")) {
-        cp_r(args.get(1), args.get(2));
-      } else if (args.size() == 2) {
-        cp(args.get(0), args.get(1));
-      } else {
-        System.out
-            .println("Error: Invalid number of arguments for cp\n(Should be just two or 3 if you're using cp -r).");
-      }
-    } else if ("cat".equals(commandName)) {
-      ArrayList<String> args = parser.getArgs();
-      if (args.size() == 1) {
-        String result = cat(args.get(0));
-        if (result != null) {
-          System.out.println(result);
+        if (args.size() == 3 && args.get(0).equals("-r")) {
+          cp_r(args.get(1), args.get(2));
+        } else if (args.size() == 2) {
+          cp(args.get(0), args.get(1));
         } else {
-          System.out.println("Error: Unable to read the file.");
+          System.out
+                  .println("Error: Invalid number of arguments for cp\n(Should be just two or 3 if you're using cp -r).");
         }
-      } else {
-        System.out.println("Error: Invalid number of arguments for cat.");
       }
-    } else if ("rmdir".equals(commandName)) {
-      ArrayList<String> args = parser.getArgs();
-      if (args.size() == 1) {
-        boolean result = rmdir(args.get(0));
-        if (result) {
-          System.out.println("Directory removed.");
+      case "cat" -> {
+        ArrayList<String> args = parser.getArgs();
+        if (args.size() == 1) {
+          String result = cat(args.get(0));
+          if (result != null) {
+            System.out.println(result);
+          } else {
+            System.out.println("Error: Unable to read the file.");
+          }
         } else {
-          System.out.println("Error: Directory cannot be removed or is not empty.");
+          System.out.println("Error: Invalid number of arguments for cat.");
         }
-      } else {
-        System.out.println("Error: Invalid number of arguments for rmdir.");
       }
-    } else if ("history".equals(commandName)) {
-      displayCommandHistory();
-    } else if ("wc".equals(commandName)) {
-      ArrayList<String> args = parser.getArgs();
-      if (args.size() == 1) {
-        wc(args.get(0));
-      } else {
-        System.out.println("Error: Invalid number of arguments for wc.");
+      case "rmdir" -> {
+        ArrayList<String> args = parser.getArgs();
+        if (args.size() == 1) {
+          boolean result = rmdir(args.get(0));
+          if (result) {
+            System.out.println("Directory removed.");
+          } else {
+            System.out.println("Error: Directory cannot be removed or is not empty.");
+          }
+        } else {
+          System.out.println("Error: Invalid number of arguments for rmdir.");
+        }
       }
-    } else {
-      System.out.println("Error: Unknown command.");
+      case "history" -> displayCommandHistory();
+      case "wc" -> {
+        ArrayList<String> args = parser.getArgs();
+        if (args.size() == 1) {
+          wc(args.get(0));
+        } else {
+          System.out.println("Error: Invalid number of arguments for wc.");
+        }
+      }
+      case null, default -> System.out.println("Error: Unknown command.");
     }
   }
 
