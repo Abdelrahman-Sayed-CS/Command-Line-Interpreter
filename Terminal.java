@@ -1,7 +1,9 @@
+
+// You will FIND JAR file in commons-io-2.15.0 Folder,
+// Please Add it as Referenced Library
+import org.apache.commons.io.FileUtils;
+
 import java.io.BufferedReader;
-
-// import org.apache.commons.io.FileUtils;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -34,6 +36,39 @@ public class Terminal {
     commandHistory.add(input);
   }
 
+  // To check if a string represents a valid file path or no
+  public Boolean isValidPath(String path) {
+    File file = new File(path);
+    return file.exists() && file.isDirectory();
+  }
+
+  public Boolean isValidPath(Path path) {
+    return Files.exists(path) && Files.isDirectory(path);
+  }
+
+  /**
+   * @param path can be null, relative or absolute path
+   * @return null => return currentPath Directory
+   * @return absolute path => if it was relative path or it was already absolute
+   */
+  public Path makeAbsoluteIfNot(Path path) {
+    if (path == null) {
+      path = this.currentPath;
+    } else if (!path.isAbsolute()) {
+      // Make the relative path absolute path by merging it with the current directory
+      path = Paths.get(this.currentPath.toString(), path.toString());
+    }
+    return path;
+  }
+
+  /**
+   * @param pathStr as path String
+   * @return absolute path as a String
+   */
+  public String makeAbsoluteIfNot(String pathStr) {
+    return makeAbsoluteIfNot(Paths.get(pathStr)).toString();
+  }
+
   public void displayCommandHistory() {
     System.out.println("Command History:");
     int counter = 1;
@@ -43,7 +78,6 @@ public class Terminal {
     }
   }
 
-
   public String getCurrentPath() {
     return currentPath.toString();
   }
@@ -52,9 +86,9 @@ public class Terminal {
   public String echo() {
     ArrayList<String> args = new ArrayList<String>();
     args = parser.getArgs();
-    String Line =  "";
+    String Line = "";
     for (String arg : args) {
-      Line+=arg + " ";
+      Line += arg + " ";
       // Line += " ";
     }
     return Line;
@@ -99,12 +133,13 @@ public class Terminal {
   // current directory
   public boolean mkdir(Path path) {
     boolean created = true;
-      File directoryFile = new File(path.toString());
-      if (!directoryFile.exists()) {
-        if (!directoryFile.mkdir()) {
-          created = false;
-        }
+
+    File directoryFile = new File(path.toString());
+    if (!directoryFile.exists()) {
+      if (!directoryFile.mkdir()) {
+        created = false;
       }
+    }
     return created;
   }
   // remove file filePath -->
@@ -154,17 +189,6 @@ public class Terminal {
     }
 
     return false;
-  }
-
-
-  // To check if a string represents a valid file path or no
-  public Boolean isValidPath(String path) {
-    File file = new File(path);
-    return file.exists() && file.isDirectory();
-  }
-
-  public Boolean isValidPath(Path path) {
-    return Files.exists(path) && Files.isDirectory(path);
   }
 
   public void cd(String pathStr) {
@@ -221,29 +245,6 @@ public class Terminal {
     return true;
   }
 
-  /**
-   * @param path can be null, relative or absolute path
-   * @return null => return currentPath Directory
-   * @return absolute path => if it was relative path or it was already absolute
-   */
-  public Path makeAbsoluteIfNot(Path path) {
-    if (path == null) {
-      path = this.currentPath;
-    } else if (!path.isAbsolute()) {
-      // Make the relative path absolute path by merging it with the current directory
-      path = Paths.get(this.currentPath.toString(), path.toString());
-    }
-    return path;
-  }
-
-  /**
-   * @param pathStr as path String
-   * @return absolute path as a String
-   */
-  public String makeAbsoluteIfNot(String pathStr) {
-    return makeAbsoluteIfNot(Paths.get(pathStr)).toString();
-  }
-
   // cp
   public boolean cp(String firstFile, String secondFile) {
     Path path1 = Paths.get(firstFile);
@@ -272,32 +273,33 @@ public class Terminal {
     return false;
   }
 
-//   public boolean cp_r(String firstDir, String secondDir) {
-//     Path path1 = Paths.get(firstDir);
-//     path1 = makeAbsoluteIfNot(path1);
+  public boolean cp_r(String firstDir, String secondDir) {
+    Path path1 = Paths.get(firstDir);
+    path1 = makeAbsoluteIfNot(path1);
 
-//     if (!isValidPath(path1)) {
-//       System.out.println("First path is not valid");
-//       return false;
-//     }
+    if (!isValidPath(path1)) {
+      System.out.println("First path is not valid");
+      return false;
+    }
 
-//     Path path2 = Paths.get(secondDir);
-//     path2 = makeAbsoluteIfNot(path2);
+    Path path2 = Paths.get(secondDir);
+    path2 = makeAbsoluteIfNot(path2);
 
-//     if (!isValidPath(path2)) {
-//       System.out.println("Second path is not valid");
-//       return false;
-//     }
+    if (!isValidPath(path2)) {
+      System.out.println("Second path is not valid");
+      return false;
+    }
 
-//     try {
-//       // Copy the firstDir and its contents to secondDir
-//       FileUtils.copyDirectory(path1.toFile(), path2.toFile());
-//       System.out.println(path1.getFileName() + " content has been copied into " + path2.getFileName());
-//     } catch (IOException e) {
-//       e.printStackTrace();
-//     }
-//     return false;
-//   }
+    try {
+      // Copy the firstDir and its contents to secondDir
+      FileUtils.copyDirectory(path1.toFile(), path2.toFile());
+      System.out.println(path1.getFileName() + " content has been copied into " +
+          path2.getFileName());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return false;
+  }
 
   // remind some thing
   public String cat(String pathFile) {
@@ -337,7 +339,6 @@ public class Terminal {
 
   }
 
-
   // print res for any command ex --> ls, ls -r
   public void printOutputForAnyCommand() {
     if (!outputs.isEmpty()) {
@@ -347,10 +348,11 @@ public class Terminal {
       System.out.println();
     }
   }
-//   print res reversed
+
+  // print res reversed
   public void printOutputForAnyCommandReversed() {
     if (!outputs.isEmpty()) {
-    Collections.reverse(outputs);
+      Collections.reverse(outputs);
       for (String output : outputs) {
         System.out.print(output + " ");
       }
@@ -364,55 +366,45 @@ public class Terminal {
     if ("echo".equals(commandName)) {
       String result = echo();
       System.out.println(result);
-    } 
-    else if ("pwd".equals(commandName)) {
+    } else if ("pwd".equals(commandName)) {
       String result = pwd();
       System.out.println(result);
-    } 
-    else if ("ls".equals(commandName)) {
+    } else if ("ls".equals(commandName)) {
       Boolean result = ls();
-      ArrayList<String>args = new ArrayList<String>();
+      ArrayList<String> args = new ArrayList<String>();
       args = parser.getArgs();
       if (result && args.size() >= 1 && args.get(0).equals("-r")) {
         printOutputForAnyCommandReversed();
-      }
-      else if(result && args.size() == 0){
+      } else if (result && args.size() == 0) {
         printOutputForAnyCommand();
-      }
-      else {
+      } else {
         System.out.println("Error: Unable to list files.");
       }
-    } 
-    else if ("mkdir".equals(commandName)) {
+    } else if ("mkdir".equals(commandName)) {
       // Check for arguments and execute mkdir
       ArrayList<String> args = parser.getArgs();
-      
-  // for (String s : dirName) {
-  //     Path path = Paths.get(s);
-  //     if (!path.isAbsolute()) {
-       
-  //       path = Paths.get(this.currentPath.toString(), s);
-  //     }
-      // if (!args.isEmpty()) {
-      //   boolean success = true;
-      //   for (String arg : args) {
-      //     if(isValidPath(arg)){
 
-      //     }
-      //     boolean result = mkdir(arg);
-      //     if (!result) {
-      //       System.out.println("Error: Unable to create directory: " + arg);
-      //       success = false;
-      //     }
-      //   }
-      //   if (success) {
-      //     System.out.println("All directories created successfully.");
-      //   }
-      // } else {
-      //   System.out.println("Error: No directory names specified for mkdir.");
-      // }
-    } 
-    else if ("rm".equals(commandName)) {
+      if (!args.isEmpty()) {
+        boolean success = true;
+        for (String arg : args) {
+          Path path = Paths.get(arg);
+          path = makeAbsoluteIfNot(path);
+          if (isValidPath(path.getParent())) {
+            boolean result = mkdir(path);
+            if (!result) {
+              System.out.println("Error: Unable to create directory: " + arg);
+              success = false;
+            }
+          }
+        }
+        if (success) {
+          System.out.println("All directories created successfully.");
+        }
+      } else {
+        System.out.println("Error: No directory names specified for mkdir.");
+      }
+
+    } else if ("rm".equals(commandName)) {
       // Check for arguments
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
@@ -425,8 +417,7 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for rm.");
       }
-    } 
-    else if ("cd".equals(commandName)) {
+    } else if ("cd".equals(commandName)) {
       ArrayList<String> args = parser.getArgs();
       if (args.isEmpty()) {
         cd(""); // Call cd with an empty string
@@ -435,8 +426,7 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for cd.");
       }
-    } 
-    else if ("touch".equals(commandName)) {
+    } else if ("touch".equals(commandName)) {
       // Check for arguments and execute touch
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
@@ -447,20 +437,18 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for touch.");
       }
-    } 
-    // else if ("cp".equals(commandName)) {
-    //   ArrayList<String> args = parser.getArgs();
+    } else if ("cp".equals(commandName)) {
+      ArrayList<String> args = parser.getArgs();
 
-    //   if (args.size() == 3 && args.get(0).equals("-r")) {
-    //     cp_r(args.get(1), args.get(2));
-    //   } else if (args.size() == 2) {
-    //     cp(args.get(0), args.get(1));
-    //   } else {
-    //     System.out
-    //             .println("Error: Invalid number of arguments for cp\n(Should be just two or 3 if you're using cp -r).");
-    //   }
-    // } 
-    else if ("cat".equals(commandName)) {
+      if (args.size() == 3 && args.get(0).equals("-r")) {
+        cp_r(args.get(1), args.get(2));
+      } else if (args.size() == 2) {
+        cp(args.get(0), args.get(1));
+      } else {
+        System.out
+            .println("Error: Invalid number of arguments for cp\n(Should be just two or 3 if you're using cp -r).");
+      }
+    } else if ("cat".equals(commandName)) {
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
         String result = cat(args.get(0));
@@ -472,8 +460,7 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for cat.");
       }
-    } 
-    else if ("rmdir".equals(commandName)) {
+    } else if ("rmdir".equals(commandName)) {
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
         boolean result = rmdir(args.get(0));
@@ -485,19 +472,16 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for rmdir.");
       }
-    } 
-    else if ("history".equals(commandName)) {
+    } else if ("history".equals(commandName)) {
       displayCommandHistory();
-    } 
-    else if ("wc".equals(commandName)) {
+    } else if ("wc".equals(commandName)) {
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
         wc(args.get(0));
       } else {
         System.out.println("Error: Invalid number of arguments for wc.");
       }
-    }
-    else {
+    } else {
       System.out.println("Error: Unknown command.");
     }
   }
@@ -516,12 +500,12 @@ public class Terminal {
       } else {
         // Execute the command
         terminal.parse(line);
-        ArrayList<String> arg = new ArrayList<String>();
-        arg = terminal.parser.getArgs();
-        for (String string : arg) {
-          System.out.println(string);
-        }
-        // terminal.chooseCommandAction();
+        // ArrayList<String> arg = new ArrayList<String>();
+        // arg = terminal.parser.getArgs();
+        // for (String string : arg) {
+        // System.out.println(string);
+        // }
+        terminal.chooseCommandAction();
       }
     }
 
