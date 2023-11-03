@@ -1,11 +1,12 @@
 import java.io.BufferedReader;
 
-import org.apache.commons.io.FileUtils;
+// import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,7 +50,14 @@ public class Terminal {
 
   // echo
   public String echo() {
-    return parser.arguments.get(0);
+    ArrayList<String> args = new ArrayList<String>();
+    args = parser.getArgs();
+    String Line =  "";
+    for (String arg : args) {
+      Line+=arg + " ";
+      // Line += " ";
+    }
+    return Line;
   }
 
   // pwd
@@ -270,32 +278,32 @@ public class Terminal {
     return false;
   }
 
-  public boolean cp_r(String firstDir, String secondDir) {
-    Path path1 = Paths.get(firstDir);
-    path1 = makeAbsoluteIfNot(path1);
+//   public boolean cp_r(String firstDir, String secondDir) {
+//     Path path1 = Paths.get(firstDir);
+//     path1 = makeAbsoluteIfNot(path1);
 
-    if (!isValidPath(path1)) {
-      System.out.println("First path is not valid");
-      return false;
-    }
+//     if (!isValidPath(path1)) {
+//       System.out.println("First path is not valid");
+//       return false;
+//     }
 
-    Path path2 = Paths.get(secondDir);
-    path2 = makeAbsoluteIfNot(path2);
+//     Path path2 = Paths.get(secondDir);
+//     path2 = makeAbsoluteIfNot(path2);
 
-    if (!isValidPath(path2)) {
-      System.out.println("Second path is not valid");
-      return false;
-    }
+//     if (!isValidPath(path2)) {
+//       System.out.println("Second path is not valid");
+//       return false;
+//     }
 
-    try {
-      // Copy the firstDir and its contents to secondDir
-      FileUtils.copyDirectory(path1.toFile(), path2.toFile());
-      System.out.println(path1.getFileName() + " content has been copied into " + path2.getFileName());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return false;
-  }
+//     try {
+//       // Copy the firstDir and its contents to secondDir
+//       FileUtils.copyDirectory(path1.toFile(), path2.toFile());
+//       System.out.println(path1.getFileName() + " content has been copied into " + path2.getFileName());
+//     } catch (IOException e) {
+//       e.printStackTrace();
+//     }
+//     return false;
+//   }
 
   // remind some thing
   public String cat(String pathFile) {
@@ -345,6 +353,16 @@ public class Terminal {
       System.out.println();
     }
   }
+//   print res reversed
+  public void printOutputForAnyCommandReversed() {
+    if (!outputs.isEmpty()) {
+    Collections.reverse(outputs);
+      for (String output : outputs) {
+        System.out.print(output + " ");
+      }
+      System.out.println();
+    }
+  }
 
   // This method will choose the suitable command method to be called
   public void chooseCommandAction() {
@@ -352,17 +370,26 @@ public class Terminal {
     if ("echo".equals(commandName)) {
       String result = echo();
       System.out.println(result);
-    } else if ("pwd".equals(commandName)) {
+    } 
+    else if ("pwd".equals(commandName)) {
       String result = pwd();
       System.out.println(result);
-    } else if ("ls".equals(commandName)) {
+    } 
+    else if ("ls".equals(commandName)) {
       Boolean result = ls();
-      if (result) {
+      ArrayList<String>args = new ArrayList<String>();
+      args = parser.getArgs();
+      if (result && args.size() >= 1 && args.get(0).equals("-r")) {
+        printOutputForAnyCommandReversed();
+      }
+      else if(result && args.size() == 0){
         printOutputForAnyCommand();
-      } else {
+      }
+      else {
         System.out.println("Error: Unable to list files.");
       }
-    } else if ("mkdir".equals(commandName)) {
+    } 
+    else if ("mkdir".equals(commandName)) {
       // Check for arguments and execute mkdir
       ArrayList<String> args = parser.getArgs();
       if (!args.isEmpty()) {
@@ -380,7 +407,8 @@ public class Terminal {
       } else {
         System.out.println("Error: No directory names specified for mkdir.");
       }
-    } else if ("rm".equals(commandName)) {
+    } 
+    else if ("rm".equals(commandName)) {
       // Check for arguments
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
@@ -393,7 +421,8 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for rm.");
       }
-    } else if ("cd".equals(commandName)) {
+    } 
+    else if ("cd".equals(commandName)) {
       ArrayList<String> args = parser.getArgs();
       if (args.isEmpty()) {
         cd(""); // Call cd with an empty string
@@ -402,7 +431,8 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for cd.");
       }
-    } else if ("touch".equals(commandName)) {
+    } 
+    else if ("touch".equals(commandName)) {
       // Check for arguments and execute touch
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
@@ -413,18 +443,20 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for touch.");
       }
-    } else if ("cp".equals(commandName)) {
-      ArrayList<String> args = parser.getArgs();
+    } 
+    // else if ("cp".equals(commandName)) {
+    //   ArrayList<String> args = parser.getArgs();
 
-      if (args.size() == 3 && args.get(0).equals("-r")) {
-        cp_r(args.get(1), args.get(2));
-      } else if (args.size() == 2) {
-        cp(args.get(0), args.get(1));
-      } else {
-        System.out
-                .println("Error: Invalid number of arguments for cp\n(Should be just two or 3 if you're using cp -r).");
-      }
-    } else if ("cat".equals(commandName)) {
+    //   if (args.size() == 3 && args.get(0).equals("-r")) {
+    //     cp_r(args.get(1), args.get(2));
+    //   } else if (args.size() == 2) {
+    //     cp(args.get(0), args.get(1));
+    //   } else {
+    //     System.out
+    //             .println("Error: Invalid number of arguments for cp\n(Should be just two or 3 if you're using cp -r).");
+    //   }
+    // } 
+    else if ("cat".equals(commandName)) {
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
         String result = cat(args.get(0));
@@ -436,7 +468,8 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for cat.");
       }
-    } else if ("rmdir".equals(commandName)) {
+    } 
+    else if ("rmdir".equals(commandName)) {
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
         boolean result = rmdir(args.get(0));
@@ -448,9 +481,11 @@ public class Terminal {
       } else {
         System.out.println("Error: Invalid number of arguments for rmdir.");
       }
-    } else if ("history".equals(commandName)) {
+    } 
+    else if ("history".equals(commandName)) {
       displayCommandHistory();
-    } else if ("wc".equals(commandName)) {
+    } 
+    else if ("wc".equals(commandName)) {
       ArrayList<String> args = parser.getArgs();
       if (args.size() == 1) {
         wc(args.get(0));
